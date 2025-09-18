@@ -12,6 +12,8 @@ services:
         - ./:/app
        env_file:
            - .env
+       environment:
+         - RUNNING_IN_DOCKER=true
        depends_on:
            - db
 
