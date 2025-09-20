@@ -40,6 +40,12 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 5,
 }
 
+SIMPLE_JWT = {
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Airport API",
     "DESCRIPTION": "Documentation for Airport API",
