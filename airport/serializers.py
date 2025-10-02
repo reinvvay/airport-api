@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from airport.models import (
     Airport,
@@ -179,9 +180,32 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class TicketSerializer(serializers.ModelSerializer):
-    flight = FlightSerializer()
-    order = OrderSerializer()
+    flight = serializers.PrimaryKeyRelatedField(queryset=Flight.objects.all())
+    order = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
 
     class Meta:
         model = Ticket
         fields = ("id", "row", "seat", "flight", "order")
+
+    def validate(self, attrs):
+        flight = attrs.get("flight")
+        row = attrs.get("row")
+        seat = attrs.get("seat")
+
+        airplane = flight.airplane
+        if not (1 <= row <= airplane.rows):
+            raise ValidationError(f"Row must be between 1 and {airplane.rows}.")
+        if not (1 <= seat <= airplane.seats_in_row):
+            raise ValidationError(
+                f"Seat must be between 1 and {airplane.seats_in_row}."
+            )
+
+        qs = Ticket.objects.filter(flight=flight, row=row, seat=seat)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError(
+                "This seat is already taken on this flight."
+            )
+
+        return attrs
